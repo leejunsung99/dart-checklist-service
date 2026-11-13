@@ -1,0 +1,107 @@
+/* ===== Base ===== */
+:root{--ink:#202020;--muted:#6c6259;--green:#a64600;--line:#e9ded1;--paper:#fffaf3}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,'Malgun Gothic',sans-serif}
+header{padding:22px 6%;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);font-size:13px;letter-spacing:.04em}
+main{max-width:1040px;margin:50px auto;padding:0 24px}
+.eyebrow{color:var(--green);font-size:12px;font-weight:750;letter-spacing:.1em}
+h1{font-size:clamp(32px,5vw,52px);line-height:1.25;letter-spacing:-.06em;margin:16px 0}
+h2{font-size:27px;line-height:1.4;letter-spacing:-.04em}
+h3{font-size:17px;margin:0 0 12px}
+p{color:var(--muted)}
+button,a{font:inherit}
+button{cursor:pointer;border:1px solid var(--line);background:white;border-radius:12px;padding:14px 20px;color:var(--ink)}
+button:hover{border-color:var(--green)}
+button:focus-visible,a:focus-visible{outline:3px solid #e87600;outline-offset:3px}
+.primary{background:var(--green);color:white;border-color:var(--green)}
+
+/* ===== Home ===== */
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
+.art{background:#fff0d3;border-radius:26px;padding:35px;transform:rotate(2deg)}
+.tile{padding:17px;background:white;border-radius:12px;margin:12px 0;box-shadow:0 6px 18px #7d450f12}
+.tile:nth-child(2){margin-left:30px}
+.tile:nth-child(3){background:#24211f;color:white}
+.note{font-size:13px;padding:16px 20px;background:#fff0d9;border-radius:12px;color:#74604b;margin-top:24px}
+
+/* ===== Questions ===== */
+.panel{background:white;padding:32px;border:1px solid var(--line);border-radius:20px;margin-top:25px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.option{text-align:left;min-height:83px;display:flex;gap:14px;align-items:center}
+.option span:first-child{color:var(--green);font-size:12px}
+.option small{display:block;color:var(--muted);margin-top:3px}
+.progress{height:5px;background:#f0e2d3;border-radius:5px;overflow:hidden;margin:15px 0 30px}
+.progress div{height:100%;background:var(--green);transition:width .2s}
+.row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.back{background:transparent;font-size:14px}
+
+/* ===== Result ===== */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{border:1px solid var(--line);border-radius:16px;padding:23px;background:white}
+.card ul{padding-left:21px;margin:0}
+.card li{margin:7px 0}
+.wide{grid-column:1/-1}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
+.chip{font-size:12px;padding:5px 11px;background:#fff0d6;border-radius:30px}
+.check{display:flex;align-items:flex-start;gap:9px;margin:9px 0}
+.check input{margin-top:7px;accent-color:var(--green)}
+a{color:var(--green);text-underline-offset:4px}
+.links a{display:block;margin:9px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}
+.steps{counter-reset:step}
+.step{padding:10px 0;border-bottom:1px solid var(--line)}
+.copy-fallback{width:100%;min-height:200px;margin-top:12px}
+footer{text-align:center;color:var(--muted);font-size:12px;margin:40px 0}
+.hidden{display:none}
+
+/* ===== Consulting CTA ===== */
+.consulting{background:#fff0d6;border-color:#f0d1a0}
+.consulting h3{font-size:24px;margin-top:8px}
+.contact-button{display:inline-block;background:var(--green);color:white;text-decoration:none;border-radius:10px;padding:12px 18px;margin:5px 0 10px}
+.consulting small{color:var(--muted)}
+
+/* ===== Luminaire brand layer ===== */
+header{background:#171717;color:#f4f0e9;border-bottom:3px solid #f68a00;gap:20px;align-items:center}
+.brand{display:flex;align-items:center;gap:22px;text-decoration:none;color:white}
+.brand img{width:164px;height:auto;display:block}
+.brand span{padding-left:20px;border-left:1px solid #57504a;font-size:13px}
+.primary,.contact-button{background:linear-gradient(115deg,#ffce00,#ff8900);color:#271b0d;border-color:#f5a000;font-weight:750}
+.progress div{background:linear-gradient(90deg,#ffc900,#f28100)}
+.art{background:linear-gradient(145deg,#fff1d1,#ffe0a3)}
+.tile:nth-child(3){border-left:4px solid #ffb600}
+.consulting{background:#24211f;border-color:#24211f;color:#fff7ed}
+.consulting p,.consulting small{color:#ddd1c2}
+.consulting a:not(.contact-button){color:#ffca52}
+.consult-logo{width:190px;height:auto;display:block;margin-bottom:18px}
+.consulting h3{color:white}
+.chip{border:1px solid #f0d9b7}
+button:hover{box-shadow:0 4px 16px #b9610914}
+a:hover{text-decoration-thickness:2px}
+
+/* ===== Responsive ===== */
+@media(max-width:680px){
+  main{margin-top:30px}
+  .hero,.grid,.options{grid-template-columns:1fr}
+  .art{display:none}
+  .panel{padding:23px}
+  .wide{grid-column:auto}
+  header{padding:18px 24px;align-items:flex-start;flex-direction:column;gap:12px}
+  .brand img{width:140px}
+  .brand span{padding-left:14px}
+  .brand{gap:14px}
+  header>span{font-size:10px}
+}
+
+/* ===== Print ===== */
+@media print{
+  header,button,.actions,footer,.contact-button{display:none!important}
+  body{background:white;font-size:11px}
+  main{margin:0;max-width:none}
+  .card{break-inside:avoid;padding:15px}
+  .grid{gap:10px}
+  h1{font-size:30px}
+  .note{font-size:10px}
+  .consulting{background:white;color:#202020;border-color:#ddd}
+  .consulting h3,.consulting p,.consulting small{color:#202020}
+  .consulting a:not(.contact-button){color:#793700}
+  .consult-logo{background:#171717;padding:8px}
+}
