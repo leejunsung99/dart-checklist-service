@@ -82,6 +82,6 @@ const OFFICIAL_LINKS = [
 const CONTACT = {
   company: '루미네어IR',
   email: 'official@luminaire.co.kr',
-  subject: 'IR/PR 컨설팅 문의',
+  formUrl: 'https://forms.gle/qa9g9jTYo8kJLBZn7',
   address: '서울시 영등포구 국회대로 62길 21 9층 루미네어아이알'
 };

@@ -23,13 +23,13 @@ function questions() {
 }
 
 function home() {
-  app.innerHTML = `<div class="hero"><div><div class="eyebrow">공시담당자의 다음 단계</div><h1>지금 내 업무,<br>무엇부터 확인할까요?</h1><p>상황에 맞는 질문 6개에 답하면<br>준비자료와 검토 경로를 한 장으로 정리합니다.</p><button class="primary" id="start">내 업무 확인하기 ↗</button><p style="font-size:12px">약 2분 · 회사명·계약금액 입력 없이 사용</p></div><div class="art" aria-hidden="true"><div class="tile">01 &nbsp; 상황을 고르고</div><div class="tile">02 &nbsp; 확인 상태를 체크하고</div><div class="tile">03 &nbsp; 나의 업무 가이드 완성 ↗</div></div></div><div class="note">교육 시리즈 연계 시안입니다. 결과는 준비·검토 경로 안내이며, 개별 건의 공시의무·법정 시한은 해당 시장의 현행 규정과 사실관계로 확인하세요.</div>`;
+  app.innerHTML = `<div class="fade-in"><div class="hero"><div><div class="eyebrow">공시담당자의 다음 단계</div><h1>지금 내 업무,<br>무엇부터 확인할까요?</h1><p class="lead">상황에 맞는 질문 6개에 답하면<br>준비자료와 검토 경로를 한 장으로 정리합니다.</p><button class="primary" id="start">내 업무 확인하기<span class="arrow">↗</span></button><p class="meta">약 1분 · 회사명·계약금액 입력 없이 사용</p></div><div class="art" aria-hidden="true"><div class="tile"><b>01</b>상황을 고르고</div><div class="tile"><b>02</b>확인 상태를 체크하고</div><div class="tile"><b>03</b>나의 업무 가이드 완성</div></div></div><div class="note">교육 시리즈 연계 시안입니다. 결과는 준비·검토 경로 안내이며, 개별 건의 공시의무·법정 시한은 해당 시장의 현행 규정과 사실관계로 확인하세요.</div></div>`;
   document.getElementById('start').onclick = () => { answers = {}; step = 0; render(); };
 }
 
 function render() {
   const qs = questions(), q = qs[step], total = qs.length;
-  app.innerHTML = `<div class="row"><div class="eyebrow">MY DISCLOSURE GUIDE</div><span>${step + 1} / ${total}</span></div><div class="progress"><div style="width:${(step + 1) / total * 100}%"></div></div><section class="panel"><h2 tabindex="-1">${q.title}</h2><p>${q.desc}</p><div class="options">${q.options.map(([v, l, d], i) => `<button class="option" data-value="${esc(v)}"><span>${String(i + 1).padStart(2, '0')}</span><span>${esc(l)}${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></section><div class="actions"><button class="back" id="back">← ${step ? '이전 질문' : '시작 화면'}</button></div>`;
+  app.innerHTML = `<div class="row"><div class="eyebrow">MY DISCLOSURE GUIDE</div><span class="counter"><b>${step + 1}</b> / ${total}</span></div><div class="progress"><div style="width:${(step + 1) / total * 100}%"></div></div><section class="panel fade-in"><h2 tabindex="-1">${q.title}</h2><p>${q.desc}</p><div class="options">${q.options.map(([v, l, d], i) => `<button class="option${answers[q.id] === v ? ' selected' : ''}" data-value="${esc(v)}"><span class="num">${String(i + 1).padStart(2, '0')}</span><span>${esc(l)}${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></section><div class="actions"><button class="ghost" id="back">← ${step ? '이전 질문' : '시작 화면'}</button></div>`;
   app.querySelectorAll('[data-value]').forEach(b => b.onclick = () => {
     if (q.id === 'topic' && answers.topic !== b.dataset.value) delete answers.detail;
     answers[q.id] = b.dataset.value;
@@ -84,28 +84,27 @@ function resultData() {
 const list = x => '<ul>' + x.map(v => `<li>${esc(v)}</li>`).join('') + '</ul>';
 
 function consultingCard() {
-  const mailto = `mailto:${CONTACT.email}?subject=${encodeURIComponent(CONTACT.subject)}`;
-  return `<section class="card wide consulting"><img class="consult-logo" src="assets/logo.png" alt="${CONTACT.company}"><h3>IR/PR 컨설팅 문의</h3><p>투자자 커뮤니케이션과 IR/PR 운영에 도움이 필요하신가요?<br>${CONTACT.company}에 상담을 문의해 주세요.</p><a class="contact-button" href="${mailto}">이메일로 상담 문의하기 ↗</a><p><strong>이메일</strong> <a href="mailto:${CONTACT.email}">${CONTACT.email}</a><br><strong>주소</strong> ${CONTACT.address}</p><small>버튼을 누르면 사용 중인 이메일 앱의 작성창이 열립니다.</small></section>`;
+  return `<section class="card wide consulting"><div><img class="consult-logo" src="assets/logo.png" alt="Luminaire IR"><h3>IR/PR 컨설팅 문의</h3><p>투자자 커뮤니케이션과 IR/PR 운영에 도움이 필요하신가요?<br>${CONTACT.company}에 상담을 문의해 주세요.</p><a class="contact-button" href="${CONTACT.formUrl}" target="_blank" rel="noopener">IR서비스 상담 신청하기 <span>↗</span></a><small>버튼을 누르면 상담 신청서가 새 창으로 열립니다.</small></div><dl class="contact-info"><dt>이메일</dt><dd><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></dd><dt>주소</dt><dd>${CONTACT.address}</dd></dl></section>`;
 }
 
 function result() {
   const { t, docs, checks, actions, priority } = resultData();
   const market = MARKETS[answers.market];
-  app.innerHTML = `<div class="eyebrow">YOUR WORKFLOW CARD</div><h1 tabindex="-1">${t.name}<br>다음 단계가 정리됐어요.</h1>
+  app.innerHTML = `<div class="fade-in"><div class="eyebrow">YOUR WORKFLOW CARD</div><h1 tabindex="-1">${t.name}<br>다음 단계가 정리됐어요.</h1>
 <div class="chips"><span class="chip">${market}</span><span class="chip">${esc(answers.detail)}</span><span class="chip">${STAGES[answers.stage]}</span></div>
-<div class="note"><strong>지금 먼저 할 일</strong><br>${priority}</div>
-<div class="actions"><button class="primary" id="print">결과 인쇄 / PDF 저장</button><button id="copy">결과 텍스트 복사</button><button id="edit">답변 수정</button><button id="restart">처음부터</button><span id="status" role="status"></span></div>
+<div class="note priority"><strong>지금 먼저 할 일</strong>${priority}</div>
+<div class="actions"><button class="primary" id="print">결과 인쇄 / PDF 저장</button><button id="copy">결과 텍스트 복사</button><button id="edit">답변 수정</button><button class="ghost" id="restart">처음부터</button><span id="status" role="status"></span></div>
 <div class="grid">
-<section class="card wide"><h3>01 · 권장 확인 순서</h3><div class="steps">${actions.map((v, i) => `<div class="step">${i + 1}. ${esc(v)}</div>`).join('')}</div></section>
-<section class="card"><h3>02 · 준비할 자료</h3>${list(docs)}</section>
-<section class="card"><h3>03 · 내부 검토부서</h3>${list(t.teams)}<p style="font-size:12px">부서명·승인권자는 회사의 조직과 내부규정에 맞춰 조정하세요.</p></section>
-<section class="card"><h3>04 · 외부 확인 경로</h3>${list(t.external)}<p style="font-size:12px">문의·사실 확인 경로입니다. 일률적인 사전 승인·보증 기관을 의미하지 않습니다.</p></section>
-<section class="card"><h3>05 · 점검 체크리스트</h3>${checks.map(x => `<label class="check"><input type="checkbox"><span>${esc(x)}</span></label>`).join('')}</section>
-<section class="card links"><h3>06 · 공식 참고 사이트</h3>${OFFICIAL_LINKS.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l} ↗</a>`).join('')}</section>
-<section class="card wide"><h3>07 · 교육 시리즈 연결</h3><p>${t.ep} · 10편 공시 후 관리${answers.public !== 'none' && answers.topic !== 'ir' ? ' · 9편 정보 공개' : ''}</p><small>영상은 기획 단계입니다. 공개 후 해당 편의 링크를 연결할 영역입니다.</small></section>
+<section class="card wide"><h3><span class="num">01</span>권장 확인 순서</h3><div class="steps">${actions.map((v, i) => `<div class="step"><b>${i + 1}</b><span>${esc(v)}</span></div>`).join('')}</div></section>
+<section class="card"><h3><span class="num">02</span>준비할 자료</h3>${list(docs)}</section>
+<section class="card"><h3><span class="num">03</span>내부 검토부서</h3>${list(t.teams)}<p class="hint">부서명·승인권자는 회사의 조직과 내부규정에 맞춰 조정하세요.</p></section>
+<section class="card"><h3><span class="num">04</span>외부 확인 경로</h3>${list(t.external)}<p class="hint">문의·사실 확인 경로입니다. 일률적인 사전 승인·보증 기관을 의미하지 않습니다.</p></section>
+<section class="card"><h3><span class="num">05</span>점검 체크리스트</h3>${checks.map(x => `<label class="check"><input type="checkbox"><span>${esc(x)}</span></label>`).join('')}</section>
+<section class="card links"><h3><span class="num">06</span>공식 참고 사이트</h3>${OFFICIAL_LINKS.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}<span>↗</span></a>`).join('')}</section>
+<section class="card series"><h3><span class="num">07</span>교육 시리즈 연결</h3><p>${t.ep} · 10편 공시 후 관리${answers.public !== 'none' && answers.topic !== 'ir' ? ' · 9편 정보 공개' : ''}</p><small>영상은 기획 단계입니다. 공개 후 해당 편의 링크를 연결할 영역입니다.</small></section>
 ${consultingCard()}
 </div>
-<div class="note">이 결과는 규칙 기반으로 구성한 업무 준비 가이드입니다. 회사 규모·거래금액·조건·사유 발생일을 입력받지 않으므로 공시 대상 여부나 제출기한을 확정하지 않습니다. 근거 자료와 현행 규정에 따라 내부 검토 및 필요한 외부 확인을 진행하세요.</div>`;
+<div class="note">이 결과는 규칙 기반으로 구성한 업무 준비 가이드입니다. 회사 규모·거래금액·조건·사유 발생일을 입력받지 않으므로 공시 대상 여부나 제출기한을 확정하지 않습니다. 근거 자료와 현행 규정에 따라 내부 검토 및 필요한 외부 확인을 진행하세요.</div></div>`;
 
   document.getElementById('print').onclick = () => window.print();
   document.getElementById('edit').onclick = () => { step = 0; render(); };
@@ -115,7 +114,7 @@ ${consultingCard()}
     const text = [market, t.name, answers.detail, STAGES[answers.stage], priority,
       '확인 순서', ...actions, '준비자료', ...docs, '내부 검토', ...t.teams, '외부 확인', ...t.external, '체크리스트', ...checks,
       '공식 자료 https://dart.fss.or.kr/info/main.do', '공시 원문 https://kind.krx.co.kr/',
-      `IR/PR 컨설팅 문의 · ${CONTACT.company}`, CONTACT.email, CONTACT.address].join('\n');
+      `IR서비스 상담 신청 · ${CONTACT.company}`, CONTACT.formUrl, CONTACT.email, CONTACT.address].join('\n');
     try {
       await navigator.clipboard.writeText(text);
       status.textContent = '복사했습니다.';

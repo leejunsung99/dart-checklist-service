@@ -1,94 +1,295 @@
-/* ===== Base ===== */
-:root{--ink:#202020;--muted:#6c6259;--green:#a64600;--line:#e9ded1;--paper:#fffaf3}
+/* =========================================================
+   공시 바로알기 · Luminaire IR tone
+   Brand: yellow #FFC400 → orange #F39200 → deep orange #E8650A, ink black
+   ========================================================= */
+:root{
+  --bg:#FBF8F4;
+  --surface:#FFFFFF;
+  --surface-warm:#FFF8EF;
+  --ink:#17140F;
+  --ink-2:#3A332B;
+  --muted:#6F665C;
+  --line:#EFE7DD;
+  --line-strong:#E4D8C9;
+  --accent:#E8650A;
+  --accent-ink:#B94E05;
+  --accent-soft:#FFF1E2;
+  --yellow:#FFC400;
+  --grad:linear-gradient(120deg,#FFC400 0%,#F39200 48%,#E8650A 100%);
+  --radius:18px;
+  --shadow-sm:0 1px 2px rgba(40,24,8,.04),0 2px 8px rgba(40,24,8,.04);
+  --shadow:0 2px 4px rgba(40,24,8,.03),0 12px 32px rgba(120,64,10,.07);
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.65 system-ui,'Malgun Gothic',sans-serif}
-header{padding:22px 6%;display:flex;justify-content:space-between;border-bottom:1px solid var(--line);font-size:13px;letter-spacing:.04em}
-main{max-width:1040px;margin:50px auto;padding:0 24px}
-.eyebrow{color:var(--green);font-size:12px;font-weight:750;letter-spacing:.1em}
-h1{font-size:clamp(32px,5vw,52px);line-height:1.25;letter-spacing:-.06em;margin:16px 0}
-h2{font-size:27px;line-height:1.4;letter-spacing:-.04em}
-h3{font-size:17px;margin:0 0 12px}
-p{color:var(--muted)}
+html{-webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.7 'Pretendard Variable',Pretendard,system-ui,-apple-system,'Malgun Gothic',sans-serif;
+  -webkit-font-smoothing:antialiased;letter-spacing:-.01em;
+  word-break:keep-all;overflow-wrap:break-word;
+  min-height:100vh;display:flex;flex-direction:column;
+}
 button,a{font:inherit}
-button{cursor:pointer;border:1px solid var(--line);background:white;border-radius:12px;padding:14px 20px;color:var(--ink)}
-button:hover{border-color:var(--green)}
-button:focus-visible,a:focus-visible{outline:3px solid #e87600;outline-offset:3px}
-.primary{background:var(--green);color:white;border-color:var(--green)}
+a{color:var(--accent-ink);text-underline-offset:4px;text-decoration-thickness:1px}
+a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:3px solid rgba(232,101,10,.45);outline-offset:3px;border-radius:10px}
+h1,h2,h3{color:var(--ink);font-weight:750}
+h1{font-size:clamp(30px,4.6vw,48px);line-height:1.25;letter-spacing:-.045em;margin:14px 0 18px}
+h2{font-size:clamp(22px,3vw,27px);line-height:1.4;letter-spacing:-.035em;margin:0 0 6px}
+h3{font-size:16px;letter-spacing:-.02em;margin:0 0 14px;display:flex;align-items:center;gap:10px}
+p{color:var(--muted);margin:0 0 16px}
+h1:focus,h2:focus{outline:none}
+
+/* ===== Header ===== */
+header{
+  position:sticky;top:0;z-index:10;
+  display:flex;justify-content:space-between;align-items:center;gap:20px;
+  padding:16px max(24px,calc((100% - 1040px)/2));
+  background:rgba(255,255,255,.86);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);
+  border-bottom:1px solid var(--line);
+}
+header::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--grad);opacity:.9}
+.brand{display:flex;align-items:center;gap:16px;text-decoration:none;color:var(--ink)}
+.brand img{width:138px;height:auto;display:block}
+.brand span{padding-left:16px;border-left:1px solid var(--line-strong);font-size:14px;font-weight:650;color:var(--ink-2);letter-spacing:-.01em}
+.badge{font-size:11px;font-weight:650;letter-spacing:.08em;color:var(--muted);padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+
+/* ===== Layout ===== */
+main{width:100%;max-width:1040px;margin:56px auto 24px;padding:0 24px;flex:1}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;color:var(--accent-ink);font-size:12px;font-weight:750;letter-spacing:.12em}
+.eyebrow::before{content:"";width:18px;height:3px;border-radius:3px;background:var(--grad)}
+.fade-in{animation:fade .35s var(--ease) both}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Buttons ===== */
+button{
+  cursor:pointer;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink);
+  border-radius:14px;padding:13px 20px;font-weight:600;
+  transition:border-color .2s var(--ease),box-shadow .2s var(--ease),transform .2s var(--ease),background .2s var(--ease);
+}
+button:hover{border-color:#F3B37A;box-shadow:0 6px 18px rgba(232,101,10,.10)}
+button:active{transform:translateY(1px)}
+.primary{background:linear-gradient(120deg,#FFD34D 0%,#FFB627 55%,#F79A1E 100%);color:var(--ink);border-color:transparent;font-weight:750;box-shadow:0 6px 16px rgba(243,146,0,.22)}
+.primary:hover{border-color:transparent;box-shadow:0 10px 24px rgba(243,146,0,.32);filter:saturate(1.08)}
+.primary .arrow{display:inline-block;margin-left:6px;color:var(--accent-ink);transition:transform .2s var(--ease)}
+.primary:hover .arrow{transform:translate(2px,-2px)}
+.ghost{background:transparent;border-color:transparent;color:var(--muted);padding-left:6px}
+.ghost:hover{color:var(--ink);box-shadow:none;border-color:transparent}
 
 /* ===== Home ===== */
-.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:40px;align-items:center}
-.art{background:#fff0d3;border-radius:26px;padding:35px;transform:rotate(2deg)}
-.tile{padding:17px;background:white;border-radius:12px;margin:12px 0;box-shadow:0 6px 18px #7d450f12}
-.tile:nth-child(2){margin-left:30px}
-.tile:nth-child(3){background:#24211f;color:white}
-.note{font-size:13px;padding:16px 20px;background:#fff0d9;border-radius:12px;color:#74604b;margin-top:24px}
+.hero{display:grid;grid-template-columns:1.2fr 1fr;gap:56px;align-items:center;padding:12px 0 8px}
+.hero p.lead{font-size:17px;color:var(--ink-2);margin-bottom:28px}
+.hero .meta{font-size:13px;margin-top:14px}
+.art{
+  position:relative;border-radius:28px;padding:34px 30px;overflow:hidden;
+  background:
+    radial-gradient(120% 90% at 100% 0%,rgba(255,196,0,.30),transparent 60%),
+    radial-gradient(110% 90% at 0% 100%,rgba(232,101,10,.18),transparent 60%),
+    var(--surface-warm);
+  border:1px solid #F6E3CC;
+}
+/* 단계 타일: 노랑 → 주황 → 진주황으로 점점 진해짐 */
+.tile{
+  display:flex;align-items:center;gap:14px;padding:16px 18px;
+  border-radius:14px;margin:12px 0;font-weight:650;color:var(--ink);
+  box-shadow:0 2px 6px rgba(150,80,10,.06),0 8px 20px rgba(232,101,10,.08)
+}
+.tile b{
+  display:inline-grid;place-items:center;width:30px;height:30px;border-radius:9px;
+  font-size:12px;background:rgba(255,255,255,.75);color:var(--accent-ink)
+}
+.tile:nth-child(1){background:#FFF6DA}
+.tile:nth-child(2){margin-left:22px;background:linear-gradient(120deg,#FFE29A,#FFCB6B)}
+.tile:nth-child(3){margin-left:44px;background:linear-gradient(120deg,#F59A1B,#E2600B);color:#fff;font-weight:700}
+.tile:nth-child(3) b{background:rgba(255,255,255,.22);color:#fff}
+.note{
+  font-size:13.5px;line-height:1.7;padding:16px 20px;background:var(--surface-warm);
+  border:1px solid #F4E4D0;border-radius:14px;color:#6E5A45;margin-top:28px
+}
+.note strong{color:var(--ink);display:block;margin-bottom:2px}
+.note.priority{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);box-shadow:var(--shadow-sm);font-size:15px;color:var(--ink-2);margin-top:20px}
+.note.priority strong{font-size:12px;letter-spacing:.08em;color:var(--accent-ink)}
 
 /* ===== Questions ===== */
-.panel{background:white;padding:32px;border:1px solid var(--line);border-radius:20px;margin-top:25px}
-.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.option{text-align:left;min-height:83px;display:flex;gap:14px;align-items:center}
-.option span:first-child{color:var(--green);font-size:12px}
-.option small{display:block;color:var(--muted);margin-top:3px}
-.progress{height:5px;background:#f0e2d3;border-radius:5px;overflow:hidden;margin:15px 0 30px}
-.progress div{height:100%;background:var(--green);transition:width .2s}
 .row{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-.back{background:transparent;font-size:14px}
+.counter{font-size:13px;font-weight:650;color:var(--muted)}
+.counter b{color:var(--ink)}
+.progress{height:6px;background:#F1E7DB;border-radius:6px;overflow:hidden;margin:14px 0 28px}
+.progress div{height:100%;background:var(--grad);border-radius:6px;transition:width .35s var(--ease)}
+.panel{background:var(--surface);padding:36px;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow)}
+.panel > p{margin-bottom:24px}
+.options{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.option{
+  text-align:left;min-height:84px;display:flex;gap:14px;align-items:center;
+  border-radius:16px;padding:16px 18px;font-weight:600;background:var(--surface)
+}
+.option .num{
+  flex:none;display:grid;place-items:center;width:32px;height:32px;border-radius:10px;
+  font-size:12px;font-weight:700;background:var(--accent-soft);color:var(--accent-ink);
+  transition:background .2s var(--ease),color .2s var(--ease)
+}
+.option small{display:block;color:var(--muted);font-weight:450;font-size:13px;margin-top:2px}
+.option:hover{border-color:#F3B37A;background:#FFFCF8;transform:translateY(-1px)}
+.option:hover .num{background:var(--grad);color:var(--ink)}
+.option.selected{border-color:var(--accent);background:#FFFAF4}
+.option.selected .num{background:var(--grad);color:var(--ink)}
 
 /* ===== Result ===== */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 0}
+.chip{font-size:12.5px;font-weight:600;padding:6px 12px;background:var(--surface);border:1px solid var(--line-strong);border-radius:999px;color:var(--ink-2)}
+.chip:first-child{background:var(--accent-soft);border-color:#F6D3B0;color:var(--accent-ink)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:24px 0}
+#status{font-size:13px;color:var(--accent-ink);font-weight:600;margin-left:4px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.card{border:1px solid var(--line);border-radius:16px;padding:23px;background:white}
-.card ul{padding-left:21px;margin:0}
-.card li{margin:7px 0}
+.card{border:1px solid var(--line);border-radius:var(--radius);padding:26px;background:var(--surface);box-shadow:var(--shadow-sm)}
+.card .num{
+  display:inline-grid;place-items:center;min-width:30px;height:24px;padding:0 8px;border-radius:8px;
+  font-size:11.5px;font-weight:750;letter-spacing:.02em;background:var(--accent-soft);color:var(--accent-ink)
+}
+.card ul{padding:0;margin:0;list-style:none}
+.card li{position:relative;padding-left:16px;margin:9px 0;color:var(--ink-2);font-size:15px}
+.card li::before{content:"";position:absolute;left:0;top:.72em;width:6px;height:6px;border-radius:50%;background:#F5B46E}
+.card .hint{font-size:12.5px;margin:14px 0 0;padding-top:12px;border-top:1px dashed var(--line-strong)}
 .wide{grid-column:1/-1}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0}
-.chip{font-size:12px;padding:5px 11px;background:#fff0d6;border-radius:30px}
-.check{display:flex;align-items:flex-start;gap:9px;margin:9px 0}
-.check input{margin-top:7px;accent-color:var(--green)}
-a{color:var(--green);text-underline-offset:4px}
-.links a{display:block;margin:9px 0}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin:24px 0}
-.steps{counter-reset:step}
-.step{padding:10px 0;border-bottom:1px solid var(--line)}
-.copy-fallback{width:100%;min-height:200px;margin-top:12px}
-footer{text-align:center;color:var(--muted);font-size:12px;margin:40px 0}
-.hidden{display:none}
+.steps{display:grid;gap:8px}
+.step{display:flex;gap:14px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:#FCFAF7;color:var(--ink-2);font-size:15px}
+.step b{
+  flex:none;display:grid;place-items:center;width:26px;height:26px;border-radius:50%;
+  font-size:12px;font-weight:750;margin-top:1px;color:#5A3200;background:#FFD54A
+}
+/* 순서가 진행될수록 노랑 → 진주황으로 진해짐 (최대 6단계) */
+.step:nth-child(2) b{background:#FFC21F}
+.step:nth-child(3) b{background:#F9A80E}
+.step:nth-child(4) b{background:#F28C0C;color:#fff}
+.step:nth-child(5) b{background:#EA740B;color:#fff}
+.step:nth-child(6) b{background:#DC5E0A;color:#fff}
+.step:last-child b{background:#E2600B;color:#fff}
+.step:only-child b{background:#FFC21F;color:#5A3200}
+.check{display:flex;align-items:flex-start;gap:11px;margin:4px 0;padding:8px 6px;border-radius:10px;cursor:pointer;color:var(--ink-2);font-size:15px;transition:background .15s}
+.check:hover{background:#FCF6EE}
+.check input{
+  appearance:none;-webkit-appearance:none;flex:none;width:20px;height:20px;margin:3px 0 0;
+  border:1.5px solid #D9C9B6;border-radius:6px;background:#fff;display:grid;place-items:center;cursor:pointer;
+  transition:all .15s var(--ease)
+}
+.check input::after{content:"";width:9px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px);opacity:0}
+.check input:checked{background:var(--accent);border-color:var(--accent)}
+.check input:checked::after{opacity:1}
+.check input:checked + span{color:var(--muted);text-decoration:line-through;text-decoration-color:#D9C9B6}
+.links a{display:flex;justify-content:space-between;align-items:center;margin:0;padding:11px 2px;border-bottom:1px solid var(--line);text-decoration:none;color:var(--ink-2);font-size:15px;font-weight:550}
+.links a:last-child{border-bottom:0}
+.links a span{color:var(--accent);transition:transform .2s var(--ease)}
+.links a:hover{color:var(--accent-ink)}
+.links a:hover span{transform:translate(2px,-2px)}
+.card.series p{color:var(--ink-2);margin-bottom:6px}
+.card.series small{color:var(--muted);font-size:12.5px}
+.copy-fallback{width:100%;min-height:200px;margin-top:12px;border:1px solid var(--line-strong);border-radius:12px;padding:12px;font:13px/1.6 inherit}
 
 /* ===== Consulting CTA ===== */
-.consulting{background:#fff0d6;border-color:#f0d1a0}
-.consulting h3{font-size:24px;margin-top:8px}
-.contact-button{display:inline-block;background:var(--green);color:white;text-decoration:none;border-radius:10px;padding:12px 18px;margin:5px 0 10px}
-.consulting small{color:var(--muted)}
+.consulting{
+  position:relative;overflow:hidden;padding:36px;border:1px solid #F3DCC0;
+  background:
+    radial-gradient(70% 120% at 100% 0%,rgba(255,196,0,.22),transparent 60%),
+    radial-gradient(60% 120% at 100% 100%,rgba(232,101,10,.14),transparent 60%),
+    var(--surface);
+  display:grid;grid-template-columns:1.3fr 1fr;gap:32px;align-items:center
+}
+.consulting::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--grad)}
+.consult-logo{width:170px;height:auto;display:block;margin-bottom:20px}
+.consulting h3{font-size:24px;letter-spacing:-.035em;margin-bottom:8px}
+.consulting p{color:var(--ink-2)}
+.contact-button{
+  display:inline-flex;align-items:center;gap:8px;background:var(--grad);color:var(--ink);text-decoration:none;
+  border-radius:14px;padding:14px 22px;font-weight:750;box-shadow:0 8px 20px rgba(232,101,10,.22);
+  transition:transform .2s var(--ease),box-shadow .2s var(--ease)
+}
+.contact-button:hover{transform:translateY(-1px);box-shadow:0 12px 28px rgba(232,101,10,.30);text-decoration:none}
+.contact-info{background:rgba(255,255,255,.75);border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:14px;color:var(--ink-2)}
+.contact-info dt{font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--muted);margin-top:10px}
+.contact-info dt:first-child{margin-top:0}
+.contact-info dd{margin:2px 0 0}
+.consulting small{display:block;color:var(--muted);font-size:12.5px;margin-top:10px}
 
-/* ===== Luminaire brand layer ===== */
-header{background:#171717;color:#f4f0e9;border-bottom:3px solid #f68a00;gap:20px;align-items:center}
-.brand{display:flex;align-items:center;gap:22px;text-decoration:none;color:white}
-.brand img{width:164px;height:auto;display:block}
-.brand span{padding-left:20px;border-left:1px solid #57504a;font-size:13px}
-.primary,.contact-button{background:linear-gradient(115deg,#ffce00,#ff8900);color:#271b0d;border-color:#f5a000;font-weight:750}
-.progress div{background:linear-gradient(90deg,#ffc900,#f28100)}
-.art{background:linear-gradient(145deg,#fff1d1,#ffe0a3)}
-.tile:nth-child(3){border-left:4px solid #ffb600}
-.consulting{background:#24211f;border-color:#24211f;color:#fff7ed}
-.consulting p,.consulting small{color:#ddd1c2}
-.consulting a:not(.contact-button){color:#ffca52}
-.consult-logo{width:190px;height:auto;display:block;margin-bottom:18px}
-.consulting h3{color:white}
-.chip{border:1px solid #f0d9b7}
-button:hover{box-shadow:0 4px 16px #b9610914}
-a:hover{text-decoration-thickness:2px}
+/* ===== Footer ===== */
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:28px 24px 36px}
+footer img{width:22px;height:auto;vertical-align:-5px;margin-right:6px;opacity:.85}
+.hidden{display:none}
 
-/* ===== Responsive ===== */
-@media(max-width:680px){
-  main{margin-top:30px}
-  .hero,.grid,.options{grid-template-columns:1fr}
-  .art{display:none}
-  .panel{padding:23px}
+/* ===== Responsive: tablet ===== */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr 1fr;gap:32px}
+}
+
+/* ===== Responsive: mobile ===== */
+@media(max-width:760px){
+  body{font-size:15px}
+  header{padding:12px 16px;padding-top:max(12px,env(safe-area-inset-top))}
+  .brand img{width:108px}
+  .brand{gap:12px}
+  .brand span{padding-left:12px;font-size:13px}
+  .badge{display:none}
+  main{margin:28px auto 16px;padding:0 16px}
+  h1{font-size:clamp(26px,7.6vw,34px);margin:10px 0 14px}
+  h2{font-size:21px}
+  p{margin-bottom:12px}
+  .hero,.grid,.options,.consulting{grid-template-columns:1fr}
   .wide{grid-column:auto}
-  header{padding:18px 24px;align-items:flex-start;flex-direction:column;gap:12px}
-  .brand img{width:140px}
-  .brand span{padding-left:14px}
-  .brand{gap:14px}
-  header>span{font-size:10px}
+
+  /* 홈: 단계 타일을 숨기지 않고 CTA 아래 간결하게 */
+  .hero{gap:28px;padding:0}
+  .hero p.lead{font-size:15.5px;margin-bottom:22px}
+  .hero .primary{width:100%;padding:16px 20px;font-size:16px}
+  .hero .meta{text-align:center;margin-top:10px}
+  .art{padding:16px;border-radius:20px}
+  .tile{margin:8px 0;padding:13px 14px;font-size:14.5px}
+  .tile:nth-child(2),.tile:nth-child(3){margin-left:0}
+  .tile b{width:28px;height:28px}
+  .note{margin-top:20px;padding:14px 16px;font-size:13px}
+
+  /* 질문 */
+  .progress{margin:10px 0 18px}
+  .panel{padding:22px 18px;border-radius:20px}
+  .panel > p{margin-bottom:18px}
+  .options{gap:10px}
+  .option{min-height:64px;padding:14px;gap:12px}
+  .option .num{width:28px;height:28px;font-size:11.5px}
+  .ghost{padding:12px 6px}
+
+  /* 결과 */
+  .note.priority{font-size:14.5px;margin-top:16px}
+  .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:18px 0}
+  .actions .primary{grid-column:1/-1;padding:15px}
+  .actions button{padding:13px 10px;font-size:14px}
+  .actions #restart{grid-column:auto}
+  #status{grid-column:1/-1;text-align:center;margin:0}
+  .grid{gap:12px}
+  .card{padding:20px 18px;border-radius:16px}
+  .card li,.step,.check,.links a{font-size:14.5px}
+  .step{padding:11px 12px;gap:12px}
+  .check{padding:9px 4px}
+
+  /* 상담 CTA */
+  .consulting{padding:26px 20px 22px 24px;gap:18px}
+  .consult-logo{width:140px;margin-bottom:16px}
+  .consulting h3{font-size:21px}
+  .contact-button{width:100%;justify-content:center;padding:15px}
+  .consulting small{text-align:center}
+  .contact-info{padding:16px}
+
+  footer{padding:20px 16px calc(28px + env(safe-area-inset-bottom));font-size:12px}
+}
+
+/* ===== Small phones ===== */
+@media(max-width:340px){
+  main{padding:0 14px}
+  .brand span{display:none}
+  .actions{grid-template-columns:1fr}
+}
+
+/* 터치 기기에서는 hover 이동 효과 끔 */
+@media(hover:none){
+  .option:hover,.contact-button:hover{transform:none}
 }
 
 /* ===== Print ===== */
@@ -96,12 +297,10 @@ a:hover{text-decoration-thickness:2px}
   header,button,.actions,footer,.contact-button{display:none!important}
   body{background:white;font-size:11px}
   main{margin:0;max-width:none}
-  .card{break-inside:avoid;padding:15px}
+  .card{break-inside:avoid;padding:14px;box-shadow:none}
   .grid{gap:10px}
-  h1{font-size:30px}
+  h1{font-size:28px}
   .note{font-size:10px}
-  .consulting{background:white;color:#202020;border-color:#ddd}
-  .consulting h3,.consulting p,.consulting small{color:#202020}
-  .consulting a:not(.contact-button){color:#793700}
-  .consult-logo{background:#171717;padding:8px}
+  .consulting{background:white;grid-template-columns:1.3fr 1fr}
+  .check input{border-color:#999}
 }
