@@ -1,120 +1,156 @@
-// 화면 흐름: home() → render() (질문 6개) → result()
+// 화면 흐름: home() → render() (상황별 질문 5~7개) → result()
+// 데이터: data.js (TOPICS·STAGES·EXPOSURE·METRICS 등) + items.js (공시 항목 ITEMS)
 
 let answers = {}, step = 0;
 const app = document.getElementById('app');
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const item = () => ITEMS.find(x => x.id === answers.item);
+const mkt = () => answers.market === 'kospi' ? 'kospi' : 'kosdaq';
+const rule = it => it[mkt()] || null;
+// 받침 유무에 맞는 조사 (예: josa('계약금액','이','가') → 계약금액이)
+const josa = (w, a, b) => { const c = w.charCodeAt(w.length - 1) - 0xAC00; return w + (c >= 0 && c <= 11171 && c % 28 ? a : b); };
+
+// 선택한 시장·규모에 맞는 의무 비율(%)
+function metricRate(it) {
+  const m = METRICS[it.id];
+  if (!m) return null;
+  const r = m[mkt()];
+  if (!r) return null;
+  const idx = { small: 0, mid: 1, large: 2 }[answers.size];
+  // 규모를 모르면 놓치지 않도록 해당 시장의 가장 낮은(엄격한) 비율 적용
+  return idx === undefined ? Math.min(...(mkt() === 'kospi' ? [r[0], r[2]] : r)) : r[idx];
+}
 
 function questions() {
-  return [
-    { id: 'market', title: '어느 시장의 회사인가요?', desc: '시장에 맞는 업무 안내와 외부 확인 경로를 맞춥니다.',
-      options: [['kosdaq', '코스닥'], ['kospi', '코스피'], ['unknown', '시장·적용 여부부터 확인']] },
-    { id: 'topic', title: '지금 어떤 업무를 처리하고 있나요?', desc: '가장 가까운 상황 하나를 골라주세요.',
-      options: Object.entries(TOPICS).map(([id, t]) => [id, t.name, t.sub]) },
-    { id: 'detail', title: '구체적으로 어떤 상황인가요?', desc: '결과에 표시할 세부 점검 항목을 선택합니다.',
-      options: (DETAILS[answers.topic] || []).map(x => [x, x]) },
-    { id: 'stage', title: '지금 어느 단계인가요?', desc: '같은 업무도 진행 시점에 따라 준비 순서가 달라집니다.',
-      options: Object.entries(STAGES) },
-    { id: 'certainty', title: '필요한 사실과 숫자가 확인됐나요?', desc: '금액·발생 시점·조건·서류의 확인 상태입니다.',
-      options: [['yes', '근거 자료까지 확인했어요'], ['partial', '일부가 미확정이거나 부족해요'], ['unknown', '무엇부터 확인할지 모르겠어요']] },
-    { id: 'public', title: answers.topic === 'ir' ? '이 정보가 외부에 전달됐나요?' : '이 건의 정보를 외부에 공개할 예정인가요?',
-      desc: 'IR·보도자료·기자·투자자 응대까지 포함합니다.',
-      options: [['planned', '아직 공개 전이고, 공개 예정이에요'], ['done', '일부 또는 전부 외부에 전달됐어요'], ['none', '현재 외부 공개 계획은 없어요'], ['unknown', '공개 여부·범위를 확인해야 해요']] }
+  const pre = answers.market === 'pre';
+  const qs = [
+    { id: 'market', title: '어느 시장의 회사인가요?', desc: '코스닥과 코스피는 공시 기준 비율과 예외 시한이 다릅니다.',
+      options: [['kosdaq', '코스닥 상장사'], ['kospi', '유가증권시장(코스피) 상장사'], ['pre', '상장을 준비 중인 회사', '코스닥 상장예비심사 준비']] }
   ];
+  if (!pre) qs.push({ id: 'size', title: '최근 사업연도말 자산총액은 어느 정도인가요?', desc: '대기업·대규모법인은 일부 항목의 공시 기준 비율이 완화됩니다. (연결 기준 여부는 시장 규정 확인)',
+    options: answers.market === 'kosdaq'
+      ? [['small', '2천억원 미만'], ['mid', '2천억원 이상 ~ 2조원 미만', '코스닥 「대기업」'], ['large', '2조원 이상', '「대규모법인」'], ['unknown', '잘 모르겠어요']]
+      : [['small', '2조원 미만'], ['large', '2조원 이상', '「대규모법인」'], ['unknown', '잘 모르겠어요']] });
+  if (!pre) qs.push({ id: 'topic', title: '지금 어떤 업무를 처리하고 있나요?', desc: '가장 가까운 업무 하나를 골라주세요.',
+    options: Object.entries(TOPICS).map(([id, t]) => [id, id === 'listing' ? '자회사 상장(중복상장)' : t.name, id === 'listing' ? '모회사 이사회 의무·주주보호' : t.sub]) });
+  const topic = pre ? 'listing' : answers.topic;
+  const pool = ITEMS.filter(x => x.topic === topic && (pre ? x.pre : !x.pre) && x[pre ? 'kosdaq' : mkt()]); // 선택한 시장에 있는 항목만
+  qs.push({ id: 'item', title: '구체적으로 어떤 사건인가요?', desc: '거래소 공시 항목 기준으로 나눴습니다.',
+    options: pool.map(x => [x.id, x.name, x.when]) });
+  if (!pre) qs.push({ id: 'stage', title: '지금 어느 단계인가요?', desc: '같은 사건도 시점에 따라 해야 할 일이 다릅니다.', options: Object.entries(STAGES) });
+  const it = item();
+  if (it && METRICS[it.id]) {
+    const m = METRICS[it.id], rate = metricRate(it);
+    qs.push({ id: 'scale', title: m.q ? m.q.replace('{rate}', rate) : `${josa(m.subject, '이', '가')} ${m.base}의 ${rate}% 이상인가요?`,
+      desc: `${MARKET_NAME[mkt()]} ${{ mid: '대기업', large: '대규모법인', unknown: '(규모 미확인 → 가장 엄격한 비율 적용)' }[answers.size] || '일반'} 기준입니다. ${(m.hint || '').startsWith('코스닥') && mkt() === 'kospi' ? '' : m.hint || ''}`,
+      options: [['over', `네, ${rate}% 이상이에요`], ['under', `아니요, ${rate}% 미만이에요`], ['calc', '아직 계산 전이에요']] });
+  }
+  if (!pre) qs.push({ id: 'exposure', title: '이 건이 외부에 알려진 상황인가요?', desc: '공정공시·조회공시 위험을 함께 점검합니다.',
+    options: Object.entries(EXPOSURE).map(([id, e]) => [id, e.label, e.sub]) });
+  return qs;
 }
 
 function home() {
-  app.innerHTML = `<div class="fade-in"><div class="hero"><div><div class="eyebrow">공시담당자의 다음 단계</div><h1>지금 내 업무,<br>무엇부터 확인할까요?</h1><p class="lead">상황에 맞는 질문 6개에 답하면<br>준비자료와 검토 경로를 한 장으로 정리합니다.</p><button class="primary" id="start">내 업무 확인하기<span class="arrow">↗</span></button><p class="meta">약 1분 · 회사명·계약금액 입력 없이 사용</p></div><div class="art" aria-hidden="true"><div class="tile"><b>01</b>상황을 고르고</div><div class="tile"><b>02</b>확인 상태를 체크하고</div><div class="tile"><b>03</b>나의 업무 가이드 완성</div></div></div><div class="note">교육 시리즈 연계 시안입니다. 결과는 준비·검토 경로 안내이며, 개별 건의 공시의무·법정 시한은 해당 시장의 현행 규정과 사실관계로 확인하세요.</div></div>`;
+  app.innerHTML = `<div class="fade-in"><div class="hero"><div><div class="eyebrow">공시담당자의 다음 단계</div><h1>지금 내 업무,<br>무엇부터 확인할까요?</h1><p class="lead">시장·규모·사건을 고르면<br>공시 기준과 시한, 체크포인트를 한 장으로 정리합니다.</p><button class="primary" id="start">내 업무 확인하기<span class="arrow">↗</span></button><p class="meta">약 1분 · 회사명·계약금액 입력 없이 사용</p></div><div class="art" aria-hidden="true"><div class="tile"><b>01</b>시장·규모·사건 선택</div><div class="tile"><b>02</b>공시 기준·시한 판정</div><div class="tile"><b>03</b>체크리스트·후속 공시</div></div></div><div class="note">거래소 「코스닥시장 공시·상장관리 해설」, 「유가증권시장 공시·상장 업무해설서」 등을 바탕으로 정리했습니다. 해설서는 개정될 수 있으므로 최종 판단은 현행 규정과 거래소 확인을 거치세요.</div></div>`;
   document.getElementById('start').onclick = () => { answers = {}; step = 0; render(); };
 }
 
 function render() {
   const qs = questions(), q = qs[step], total = qs.length;
-  app.innerHTML = `<div class="row"><div class="eyebrow">MY DISCLOSURE GUIDE</div><span class="counter"><b>${step + 1}</b> / ${total}</span></div><div class="progress"><div style="width:${(step + 1) / total * 100}%"></div></div><section class="panel fade-in"><h2 tabindex="-1">${q.title}</h2><p>${q.desc}</p><div class="options">${q.options.map(([v, l, d], i) => `<button class="option${answers[q.id] === v ? ' selected' : ''}" data-value="${esc(v)}"><span class="num">${String(i + 1).padStart(2, '0')}</span><span>${esc(l)}${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></section><div class="actions"><button class="ghost" id="back">← ${step ? '이전 질문' : '시작 화면'}</button></div>`;
+  app.innerHTML = `<div class="row"><div class="eyebrow">MY DISCLOSURE GUIDE</div><span class="counter"><b>${step + 1}</b> / ${total}</span></div><div class="progress"><div style="width:${(step + 1) / total * 100}%"></div></div><section class="panel fade-in"><h2 tabindex="-1">${esc(q.title)}</h2><p>${esc(q.desc)}</p><div class="options">${q.options.map(([v, l, d], i) => `<button class="option${answers[q.id] === v ? ' selected' : ''}" data-value="${esc(v)}"><span class="num">${String(i + 1).padStart(2, '0')}</span><span>${esc(l)}${d ? `<small>${esc(d)}</small>` : ''}</span></button>`).join('')}</div></section><div class="actions"><button class="ghost" id="back">← ${step ? '이전 질문' : '시작 화면'}</button></div>`;
   app.querySelectorAll('[data-value]').forEach(b => b.onclick = () => {
-    if (q.id === 'topic' && answers.topic !== b.dataset.value) delete answers.detail;
-    answers[q.id] = b.dataset.value;
-    if (step < total - 1) { step++; render(); } else result();
+    const v = b.dataset.value;
+    if (answers[q.id] !== v) {
+      // 앞 답이 바뀌면 그 답에 의존하는 뒤 답을 지움
+      const deps = { market: ['size', 'topic', 'item', 'scale'], size: ['scale'], topic: ['item', 'scale'], item: ['scale'] }[q.id] || [];
+      deps.forEach(k => delete answers[k]);
+    }
+    answers[q.id] = v;
+    if (step < questions().length - 1) { step++; render(); } else result();
     window.scrollTo(0, 0);
   });
   document.getElementById('back').onclick = () => { if (step) { step--; render(); } else home(); };
   app.querySelector('h2').focus();
 }
 
-function resultData() {
-  const t = TOPICS[answers.topic];
-  const detail = answers.detail || '';
-  let docs = [...t.docs];
-  let checks = ['해당 시장·공시 항목·관련 보고의무 확인', '발생 시점·제출 시한·담당자 확인', '공시 수치·문안·근거 문서 대조'];
-  let priority = '근거 자료를 모아 적용 의무와 처리 일정을 확인하세요.';
-  let actions = [];
+function verdict(it) {
+  const r = rule(it), m = METRICS[it.id], rate = metricRate(it);
+  if (!r) return { level: 'check', label: '확인 필요', title: `${MARKET_NAME[mkt()]} 해설서에는 별도 항목이 없어요`, text: '다른 시장 기준을 참고로 보여드립니다. 적용 여부는 거래소에 확인하세요.' };
+  if (answers.market === 'pre') return { level: 'info', label: '상장 준비', title: '심사 전에 미리 갖출 사항입니다', text: r.duty };
+  if (m) {
+    if (answers.scale === 'over') return { level: 'must', label: '의무공시', title: '공시의무 대상으로 보입니다', text: r.duty };
+    if (answers.scale === 'under') {
+      const note = m.underNote && !(m.underNote.startsWith('코스닥') && mkt() === 'kospi') ? ` 단, ${m.underNote}` : '';
+      return { level: 'voluntary', label: '자율공시 검토', title: '비율 기준으로는 의무공시 대상이 아닙니다', text: (r.voluntary ? `자율공시 가능: ${r.voluntary}` : '투자판단에 중요한 정보라면 자율공시 여부를 검토하고, 외부에 먼저 알릴 때는 공정공시를 확인하세요.') + note };
+    }
+    return { level: 'check', label: '기준 산정', title: '공시 기준 비율부터 계산하세요', text: `${m.calc || `${m.subject} ÷ ${m.base}`} 결과가 ${rate}% 이상이면 공시의무 대상입니다. 기준: ${r.duty}` };
+  }
+  if (it.id === 'voluntary_contract_disclosure' || it.id === 'voluntary_clarification') return { level: 'voluntary', label: '자율공시', title: '의무는 아니지만, 내면 책임도 같습니다', text: r.duty };
+  if (it.topic === 'ir') return { level: 'info', label: '대응 기준', title: '시한과 대응 기준부터 확인하세요', text: r.duty };
+  if (it.topic === 'listing') return { level: 'info', label: '사전 절차', title: '상장 신청 전에 거쳐야 할 절차입니다', text: r.duty };
+  return { level: 'must', label: '의무공시', title: '사실이 확정되면 공시해야 하는 항목입니다', text: r.duty };
+}
 
-  if (answers.stage === 'plan') actions = ['유관부서에서 안건·계약·일정 초안을 받기', '관련 의무·발생 시점·기준 재무값을 사전 검토하기', '결정일에 확정할 자료와 내부 검토 담당자를 지정하기'];
-  if (answers.stage === 'event') actions = ['결정·체결·확인된 사실과 정확한 시점을 기록하기', '현행 규정에서 의무·제출처·시한을 확인하기', '문안·첨부자료를 검토하고 제출 일정을 확정하기'];
-  if (answers.stage === 'filed') actions = ['실제 게시본과 첨부파일 확인하기', '조건 변경·완료·결과 보고 등 후속 일정을 등록하기', '담당부서별 재확인 시점과 증빙을 기록하기'];
-  if (answers.stage === 'changed') {
-    docs.unshift('최초 공시·정정 이력과 변경 전후 대비표');
-    checks.unshift('변경 사실·오류·미확정 사항의 확정·완료를 구분');
-    actions = ['변경 내용과 확인 시점을 원문 자료로 정리하기', '최초 공시와 대조해 정정·재공시·별도 후속 보고를 검토하기', '현행 규정상 시한을 확인하고 담당 검토자와 처리하기'];
-    priority = '최초 공시와 달라진 내용 및 확인 시점부터 정리하세요.';
-  }
-  if (answers.certainty !== 'yes') {
-    docs.unshift('미확인 정보 목록·확인 담당자·회신 예정 시각');
-    actions.unshift('부족한 사실을 확인하면서 의무·시한 검토를 병행하기');
-    checks.push('자료 미확정 여부와 별개로 사유 발생 시점을 검토');
-    priority = '부족한 정보와 확인 담당자를 정리하고 시한 검토를 병행하세요.';
-  }
-  if (answers.public !== 'none') {
-    docs.push('기존 공개 자료·공개 시각·수신 대상·추가 공개 계획');
-    checks.push('미공개 중요정보·공정공시 및 공개 순서 검토');
-  }
-  if (answers.public === 'done') {
-    actions.unshift('실제 공개 내용·시각·대상을 확보해 공시책임자와 대응 검토하기');
-    priority = '외부 전달 내용을 확보하고 공개 시점과 관련 공시를 대조하세요.';
-  }
-  if (detail === '소각') checks.push('소각 결의·변경상장 등 후속 절차 검토');
-  if (detail.includes('임원') || detail.includes('전환')) checks.push('임원·주요주주 소유보고·대량보유 등 별도 보고의무와 의무자 검토');
-  if (detail === '종료·해지') checks.push('정상 이행 종료와 계약 해지를 구분해 의무 검토');
-  if (answers.topic === 'results' && detail === '사업·반기·분기보고서') checks.push('부서별 변경사항·서명·첨부 및 XBRL 적용 범위 확인');
-  if (answers.topic === 'meeting') checks.push('회사 정관·기준일·표결결과 및 후속 신고 확인');
-  if (answers.topic === 'funding') checks.push('공모·사모 등 발행 구조별 추가 서류 검토');
-  if (answers.market === 'unknown') actions.unshift('상장시장과 회사에 적용되는 규정부터 확인하기');
-  return { t, docs, checks, actions, priority };
+function plan(it, v) {
+  const r = rule(it) || it.kosdaq || it.kospi || {};
+  const dl = r.deadline ? `${it.topic === 'ir' ? '대응' : '제출'} 시한 확인: ${r.deadline}` : '시한을 현행 규정으로 확인';
+  if (answers.market === 'pre') return ['상장주선인(주관사)과 신청 일정과 형식요건 충족 여부부터 점검하기', '지정감사·재무제표 준비 일정을 신청 시점에서 역산하기', '정관·지배구조·내부통제 정비 과제를 목록으로 만들기', '상장 일정에 맞춰 IR Book·기업설명회 준비 일정을 함께 잡기'];
+  const s = answers.stage, fss = it.fss ? [`함께 챙길 제출·보고: ${it.fss}`] : [];
+  if (s === 'plan' && it.topic === 'ir') return ['공개할 정보 범위와 대응 창구(공시책임자·IR)를 미리 정하기', dl, '아래 체크포인트를 공시책임자와 함께 확인하기', '예상 질의와 답변 문안을 공시책임자 검토를 거쳐 준비하기'];
+  if (s === 'plan') return ['결정 이사회일·계약 체결일 등 「사유 발생일」을 미리 특정하기', dl, '아래 체크포인트를 담당부서와 하나씩 확인하기', '공시 문안 초안과 첨부 근거자료를 결정 전에 준비하기'];
+  if (s === 'event') return [v.level === 'check' ? '기준 금액·비율을 오늘 바로 산정하기' : '사유 발생 시각을 기록하고 시한을 역산하기', dl, '아래 체크포인트로 공시 문안·첨부를 점검하기', ...fss, '공시책임자 검토 후 시한 안에 제출하기'];
+  if (s === 'filed') return ['게시된 공시 원문·첨부를 사내 근거자료와 대조하기', '아래 후속 공시 중 해당하는 것을 일정표에 등록하기', '금액·기간·일정 등 바뀔 수 있는 조건을 담당부서와 정기 점검하기'];
+  return ['변경 전·후 대비표와 변경 확정일을 정리하기', '정정·변경 공시 시한 확인 (대부분 사유 발생일 당일)', ...(it.penalty ? [`번복·변경 리스크 점검: ${it.penalty}`] : []), '정정 사유를 문안에 명확히 적기'];
 }
 
 const list = x => '<ul>' + x.map(v => `<li>${esc(v)}</li>`).join('') + '</ul>';
 
-function consultingCard() {
-  return `<section class="card wide consulting"><div><img class="consult-logo" src="assets/logo.png" alt="Luminaire IR"><h3>IR/PR 컨설팅 문의</h3><p>투자자 커뮤니케이션과 IR/PR 운영에 도움이 필요하신가요?<br>${CONTACT.company}에 상담을 문의해 주세요.</p><a class="contact-button" href="${CONTACT.formUrl}" target="_blank" rel="noopener">IR서비스 상담 신청하기 <span>↗</span></a><small>버튼을 누르면 상담 신청서가 새 창으로 열립니다.</small></div><dl class="contact-info"><dt>이메일</dt><dd><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></dd><dt>주소</dt><dd>${CONTACT.address}</dd></dl></section>`;
+function consultingCard(t) {
+  return `<section class="card wide consulting"><div><img class="consult-logo" src="assets/logo.png" alt="Luminaire IR"><h3>IR/PR 컨설팅 문의</h3><p>${esc(t.pitch || '투자자 커뮤니케이션과 IR/PR 운영에 도움이 필요하신가요?')}<br>${CONTACT.company}에 상담을 문의해 주세요.</p><a class="contact-button" href="${CONTACT.formUrl}" target="_blank" rel="noopener">IR서비스 상담 신청하기 <span>↗</span></a><small>버튼을 누르면 상담 신청서가 새 창으로 열립니다.</small></div><dl class="contact-info"><dt>이메일</dt><dd><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></dd><dt>주소</dt><dd>${CONTACT.address}</dd></dl></section>`;
 }
 
 function result() {
-  const { t, docs, checks, actions, priority } = resultData();
-  const market = MARKETS[answers.market];
-  app.innerHTML = `<div class="fade-in"><div class="eyebrow">YOUR WORKFLOW CARD</div><h1 tabindex="-1">${t.name}<br>다음 단계가 정리됐어요.</h1>
-<div class="chips"><span class="chip">${market}</span><span class="chip">${esc(answers.detail)}</span><span class="chip">${STAGES[answers.stage]}</span></div>
-<div class="note priority"><strong>지금 먼저 할 일</strong>${priority}</div>
+  const it = item(), t = TOPICS[it.topic], v = verdict(it), steps = plan(it, v);
+  const ex = answers.market === 'pre' ? PRE_EXPOSURE : EXPOSURE[answers.exposure];
+  const r = rule(it) || it.kosdaq || it.kospi || {};
+  const other = answers.market === 'pre' ? null : it[mkt() === 'kospi' ? 'kosdaq' : 'kospi'];
+  const sizeName = answers.market === 'pre' ? '' : ({ small: '일반', mid: '대기업', large: '대규모법인', unknown: '규모 미확인' }[answers.size]);
+  const exposureNotes = [...ex.notes, ...(it.penalty ? [it.penalty] : [])];
+  const L = answers.market === 'pre' ? { dl: '심사 기간', checks: '준비 체크포인트', next: '이후 일정' }
+    : it.topic === 'listing' ? { dl: '제출 시한', checks: '절차 체크포인트', next: '단계별 공시·후속 절차' }
+    : it.topic === 'ir' ? { dl: '대응 시한', checks: '대응 전 체크포인트', next: '후속 공시 일정' }
+    : { dl: '제출 시한', checks: '공시 전 체크포인트', next: '후속 공시 일정' };
+
+  app.innerHTML = `<div class="fade-in"><div class="eyebrow">YOUR DISCLOSURE CARD</div><h1 tabindex="-1">${esc(it.name)}</h1>
+<div class="chips"><span class="chip">${answers.market === 'pre' ? '상장 준비' : MARKET_NAME[mkt()]}</span>${sizeName ? `<span class="chip">${sizeName}</span>` : ''}${answers.stage ? `<span class="chip">${STAGES[answers.stage]}</span>` : ''}</div>
+<section class="verdict lv-${v.level}"><div class="v-head"><span class="v-label">${v.label}</span><h2>${esc(v.title)}</h2><p>${esc(v.text)}</p></div>
+<dl class="v-facts"><div><dt>${L.dl}</dt><dd>${esc(r.deadline || '현행 규정 확인')}</dd></div>${it.fss ? `<div><dt>관련 제출·보고</dt><dd>${esc(it.fss)}</dd></div>` : ''}</dl>
+${other && other.duty && other.duty !== r.duty ? `<p class="v-compare"><b>${josa(MARKET_NAME[mkt() === 'kospi' ? 'kosdaq' : 'kospi'], '은', '는')} 다릅니다</b> ${esc(other.duty)}</p>` : ''}</section>
 <div class="actions"><button class="primary" id="print">결과 인쇄 / PDF 저장</button><button id="copy">결과 텍스트 복사</button><button id="edit">답변 수정</button><button class="ghost" id="restart">처음부터</button><span id="status" role="status"></span></div>
 <div class="grid">
-<section class="card wide"><h3><span class="num">01</span>권장 확인 순서</h3><div class="steps">${actions.map((v, i) => `<div class="step"><b>${i + 1}</b><span>${esc(v)}</span></div>`).join('')}</div></section>
-<section class="card"><h3><span class="num">02</span>준비할 자료</h3>${list(docs)}</section>
-<section class="card"><h3><span class="num">03</span>내부 검토부서</h3>${list(t.teams)}<p class="hint">부서명·승인권자는 회사의 조직과 내부규정에 맞춰 조정하세요.</p></section>
-<section class="card"><h3><span class="num">04</span>외부 확인 경로</h3>${list(t.external)}<p class="hint">문의·사실 확인 경로입니다. 일률적인 사전 승인·보증 기관을 의미하지 않습니다.</p></section>
-<section class="card"><h3><span class="num">05</span>점검 체크리스트</h3>${checks.map(x => `<label class="check"><input type="checkbox"><span>${esc(x)}</span></label>`).join('')}</section>
-<section class="card links"><h3><span class="num">06</span>공식 참고 사이트</h3>${OFFICIAL_LINKS.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}<span>↗</span></a>`).join('')}</section>
-<section class="card series"><h3><span class="num">07</span>교육 시리즈 연결</h3><p>${t.ep} · 10편 공시 후 관리${answers.public !== 'none' && answers.topic !== 'ir' ? ' · 9편 정보 공개' : ''}</p><small>영상은 기획 단계입니다. 공개 후 해당 편의 링크를 연결할 영역입니다.</small></section>
-${consultingCard()}
+<section class="card wide"><h3><span class="num">01</span>지금 할 일</h3><div class="steps">${steps.map((x, i) => `<div class="step"><b>${i + 1}</b><span>${esc(x)}</span></div>`).join('')}</div></section>
+<section class="card"><h3><span class="num">02</span>${L.checks}</h3>${(it.checks || []).map(x => `<label class="check"><input type="checkbox"><span>${esc(x)}</span></label>`).join('')}</section>
+<section class="card"><h3><span class="num">03</span>자주 틀리는 부분</h3>${list(it.pitfalls || [])}</section>
+<section class="card"><h3><span class="num">04</span>${L.next}</h3>${list(it.followups || ['후속 공시 사항 없음 — 변경 발생 시 정정 여부 검토'])}</section>
+<section class="card ${ex.level === 'high' ? 'alert' : ''}"><h3><span class="num">05</span>${answers.market === 'pre' ? '상장 전 정보 관리' : '외부 공개·불성실공시 리스크'}</h3><p class="hint strong">${esc(ex.head)}</p>${list(exposureNotes)}</section>
+<section class="card"><h3><span class="num">06</span>준비자료</h3>${list(t.docs)}</section>
+<section class="card"><h3><span class="num">07</span>내부 검토·외부 확인</h3>${list([...t.teams, ...t.external])}<p class="hint">부서명·승인권자는 회사 조직에 맞춰 조정하세요.</p></section>
+<section class="card links wide"><h3><span class="num">08</span>공식 참고 사이트</h3>${OFFICIAL_LINKS.map(([l, u]) => `<a href="${u}" target="_blank" rel="noopener">${l}<span>↗</span></a>`).join('')}</section>
+${consultingCard(t)}
 </div>
-<div class="note">이 결과는 규칙 기반으로 구성한 업무 준비 가이드입니다. 회사 규모·거래금액·조건·사유 발생일을 입력받지 않으므로 공시 대상 여부나 제출기한을 확정하지 않습니다. 근거 자료와 현행 규정에 따라 내부 검토 및 필요한 외부 확인을 진행하세요.</div></div>`;
+<div class="note">거래소 해설서 내용을 요약한 업무 가이드입니다. 해설서와 규정이 다르면 규정이 우선하며, 개별 건의 공시 여부·시한은 사실관계에 따라 달라질 수 있으니 거래소 공시 담당에 확인하세요.</div></div>`;
 
   document.getElementById('print').onclick = () => window.print();
   document.getElementById('edit').onclick = () => { step = 0; render(); };
   document.getElementById('restart').onclick = home;
   document.getElementById('copy').onclick = async () => {
     const status = document.getElementById('status');
-    const text = [market, t.name, answers.detail, STAGES[answers.stage], priority,
-      '확인 순서', ...actions, '준비자료', ...docs, '내부 검토', ...t.teams, '외부 확인', ...t.external, '체크리스트', ...checks,
-      '공식 자료 https://dart.fss.or.kr/info/main.do', '공시 원문 https://kind.krx.co.kr/',
-      `IR서비스 상담 신청 · ${CONTACT.company}`, CONTACT.formUrl, CONTACT.email, CONTACT.address].join('\n');
+    const text = [`[${it.name}] ${answers.market === 'pre' ? '상장 준비' : MARKET_NAME[mkt()]} ${sizeName} · ${STAGES[answers.stage] || '상장 준비'}`,
+      `판정: ${v.label} — ${v.title}`, v.text, `${it.topic === 'ir' ? '대응' : '제출'} 시한: ${r.deadline || '현행 규정 확인'}`, ...(it.fss ? [`관련 제출·보고: ${it.fss}`] : []),
+      '', '■ 지금 할 일', ...steps.map((x, i) => `${i + 1}. ${x}`), '', '■ 체크포인트', ...(it.checks || []).map(x => `- ${x}`),
+      '', '■ 자주 틀리는 부분', ...(it.pitfalls || []).map(x => `- ${x}`), '', '■ 후속 공시', ...(it.followups || []).map(x => `- ${x}`),
+      '', '■ 외부 공개 리스크', ex.head, ...exposureNotes.map(x => `- ${x}`),
+      '', `IR서비스 상담 신청 · ${CONTACT.company} ${CONTACT.formUrl}`].join('\n');
     try {
       await navigator.clipboard.writeText(text);
       status.textContent = '복사했습니다.';
