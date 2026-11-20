@@ -31,6 +31,9 @@ npx serve .
 
 정적 파일만 있으므로 Netlify, GitHub Pages 등에 저장소 루트를 그대로 배포하면 됩니다.
 
+- **운영 주소**: https://luminaireir-checklist-service.netlify.app/
+- Netlify가 GitHub 저장소(`leejunsung99/dart-checklist-service`)의 `main` 브랜치에 연결되어 있어, `main`에 푸시하면 자동으로 다시 배포됩니다.
+
 ## 참고
 
 이 가이드는 해설서를 요약한 업무 안내이며, 개별 건의 최종 판단은 현행 규정과 거래소 확인을 따릅니다. 선택값은 서버로 전송되지 않습니다.
