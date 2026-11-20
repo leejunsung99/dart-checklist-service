@@ -109,5 +109,6 @@ const CONTACT = {
   company: '루미네어IR',
   email: 'official@luminaire.co.kr',
   formUrl: 'https://forms.gle/qa9g9jTYo8kJLBZn7',
-  address: '서울시 영등포구 국회대로 62길 21 9층 루미네어IR'
+  address: '서울시 영등포구 국회대로 62길 21 9층 루미네어IR',
+  phone: '+82 1844 1374'
 };

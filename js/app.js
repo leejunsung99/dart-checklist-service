@@ -106,7 +106,7 @@ function plan(it, v) {
 const list = x => '<ul>' + x.map(v => `<li>${esc(v)}</li>`).join('') + '</ul>';
 
 function consultingCard(t) {
-  return `<section class="card wide consulting"><div><img class="consult-logo" src="assets/logo.png" alt="Luminaire IR"><h3>IR/PR 컨설팅 문의</h3><p>${esc(t.pitch || '투자자 커뮤니케이션과 IR/PR 운영에 도움이 필요하신가요?')}<br>${CONTACT.company}에 상담을 문의해 주세요.</p><a class="contact-button" href="${CONTACT.formUrl}" target="_blank" rel="noopener">IR서비스 상담 신청하기 <span>↗</span></a><small>버튼을 누르면 상담 신청서가 새 창으로 열립니다.</small></div><dl class="contact-info"><dt>이메일</dt><dd><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></dd><dt>주소</dt><dd>${CONTACT.address}</dd></dl></section>`;
+  return `<section class="card wide consulting"><div><img class="consult-logo" src="assets/logo.png" alt="Luminaire IR"><h3>IR/PR 컨설팅 문의</h3><p>${esc(t.pitch || '투자자 커뮤니케이션과 IR/PR 운영에 도움이 필요하신가요?')}<br>${CONTACT.company}에 상담을 문의해 주세요.</p><a class="contact-button" href="${CONTACT.formUrl}" target="_blank" rel="noopener">IR서비스 상담 신청하기 <span>↗</span></a><small>버튼을 누르면 상담 신청서가 새 창으로 열립니다.</small></div><dl class="contact-info"><dt>이메일</dt><dd><a href="mailto:${CONTACT.email}">${CONTACT.email}</a></dd><dt>주소</dt><dd>${CONTACT.address}</dd><dt>전화번호</dt><dd><a href="tel:${CONTACT.phone.replace(/\s/g, "")}">${CONTACT.phone}</a></dd></dl></section>`;
 }
 
 function result() {
