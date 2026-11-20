@@ -308,7 +308,8 @@ footer img{width:22px;height:auto;vertical-align:-5px;margin-right:6px;opacity:.
 /* 07 카드를 숨겼을 때 06 공식 참고 사이트를 넓게 2열로 */
 .links.wide{display:grid;grid-template-columns:1fr 1fr;column-gap:32px;align-content:start}
 .links.wide h3{grid-column:1/-1}
-@media(max-width:760px){.links.wide{grid-template-columns:1fr}}
+.links.wide a:nth-last-child(-n+2){border-bottom:0} /* 2열일 때 아래 줄 두 개 모두 구분선 없음 */
+@media(max-width:760px){.links.wide{grid-template-columns:1fr}.links.wide a:nth-last-child(2){border-bottom:1px solid var(--line)}}
 
 /* 판정 카드 */
 .verdict{margin:22px 0 4px;background:var(--surface);border:1px solid var(--line);border-left:6px solid var(--accent);border-radius:20px;padding:26px 28px;box-shadow:var(--shadow)}
